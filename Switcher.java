@@ -1,70 +1,44 @@
 package switchGame;
 
 
-import java.applet.AudioClip;
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.LinkedList;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 
 public class Switcher extends JApplet
-  implements ActionListener, KeyListener, Runnable
+  implements ActionListener, KeyListener
 {
 
+
+  private static final long serialVersionUID = 1L;
+  public static final int EASY = 5;
+  public static final int MEDIUM = 7;
+  public static final int HARD = 10;
+  public static final Font db = new Font("Dialog", Font.BOLD, 18);   
+  public static final Font tr = new Font("TimesRoman", Font.PLAIN, 12);
+  public static final Font d = new Font("Dialog", Font.PLAIN, 14); 
+  public static final Font db25 = new Font("Dialog", Font.BOLD, 35);
+  public static final Color BGCOLOR = Color.black;
+  public static final Color TEXTC = Color.white;
+	  
   Image image;                // off-screen buffer
-  Graphics g;                 // that buffer's graphical tools
+  Graphics g;                 // the buffer's graphical tools
   LL<Integer> goal = new LL<Integer>();
   LL<Integer> initial = new LL<Integer>();
   LL<Integer> current = new LL<Integer>();
-  int sleepTime = 50;         // 50 milliseconds between updates
-  int cycleNum;               // number of update cycles so far
-  int topScore;
-  String messageTop = "";             // A String that will be printed on screen
+  String messageTop = "";             
   String messageBottom = "";
   int difficulty = 5;
   int numMoves;
-  int EASY = 5;
-  int MEDIUM = 7;
-  int HARD = 10;
-  Font db = new Font("Dialog", Font.BOLD, 18);   
-  Font tr = new Font("TimesRoman", Font.PLAIN, 12);
-  Font d = new Font("Dialog", Font.PLAIN, 14); 
-  Font db25 = new Font("Dialog", Font.BOLD, 35);
 
- 
-  // DEFINE CONSTANTS FOR YOUR PROGRAM HERE TO AVOID MAGIC VALUES!
-  public static final int STRINGX = 15;
-  public static final int STRINGY = 25;
-  public static final int GAMEBOARDHEIGHT = 490; 
-                               // Recommended values: 
-                               // 490 with both menu bar and buttons
-                               // 525 with only the menu bar
-                               // 515 with only buttons
-  public static final Color BGCOLOR = Color.black;
-  public static final Color TEXTC = Color.white;
-
-  // BELOW ARE DEFINITIONS OF BUTTONS AND MENU ITEMS WHICH WILL APPEAR
-  private JButton newGameButton;
-  private JButton pauseButton;
   private JButton startButton;
-  
   private JMenu diffMenu;
   private JMenuItem easyItem;
   private JMenuItem mediumItem;
   private JMenuItem hardItem;
   
-  private JMenu gameMenu;
-  private JMenuItem newGameItem;
-  private JMenuItem pauseItem;
-  private JMenuItem startItem;
-
-  private Color currentColor; // This is for the big square
 
   /******************************************************************/  
 
@@ -85,13 +59,7 @@ public class Switcher extends JApplet
     buttonPane.setBackground(BGCOLOR);
     add(buttonPane, BorderLayout.PAGE_END);
 
-
-    newGameButton = new JButton("New Game"); // the text in the button
-    newGameButton.addActionListener(this);   // watch for button presses
-    newGameButton.addKeyListener(this);      // listen for key presses here
-   // buttonPane.add(newGameButton);           // add button to the panel
-
-    startButton = new JButton("Start");      // a third button
+    startButton = new JButton("Start");    
     startButton.addActionListener(this);
     startButton.addKeyListener(this);
     buttonPane.add(startButton);
@@ -122,33 +90,13 @@ public class Switcher extends JApplet
     hardItem.addActionListener(this);     // Watch for button presses
     hardItem.addKeyListener(this);        // Listen for key presses here
     diffMenu.add(hardItem);   
-    
-    // Add a menu to contain items
-    gameMenu = new JMenu("Game");            // The menu name
-  //  menuBar.add(gameMenu);                   // Add the menu to menu bar
-    
-    newGameItem = new JMenuItem("New Game"); // the text in the menu item
-    newGameItem.addActionListener(this);     // Watch for button presses
-    newGameItem.addKeyListener(this);        // Listen for key presses here
-    gameMenu.add(newGameItem);               // Add the item to the menu
-
-
-    startItem = new JMenuItem("Start");      // A third menu item
-    startItem.addActionListener(this);
-    startItem.addKeyListener(this);
-    gameMenu.add(startItem);
-
+  
     // END OF MENU BAR CODE
 
-    // If you choose not to use either menus or buttons, comment out the
-    // related code, and adjust GAMEBOARDHEIGHT to account for the 
-    // increased amount of space available to the game board
-
-    // Sets up the back (off-screen) buffer for drawing, named image
-    image = createImage(getSize().width, GAMEBOARDHEIGHT);
+     // Sets up the back (off-screen) buffer for drawing, named image
+    image = createImage(getSize().width, 490);
     g = image.getGraphics();                 // g holds drawing routines
     this.clear();                            // clears the screen
-//    this.reset();                            // Set up the game internals!
 
     //add a central panel which holds the buffer (the game board)
     add(new ImagePanel(image), BorderLayout.CENTER);
@@ -160,37 +108,32 @@ public class Switcher extends JApplet
     repaint();              // tell Java to update the screen
   }
 
+// Reset the internal representation of the game for every new game
   
-  boolean win()
-  {
-	  return this.current.equals(this.goal);
-	  }
-
-//Each time you start a new game, you will want to reset the
-  // internal representation of the game.  Here's a good place to do it!
-  // Remember, the applet will be initialized just once, but you may
-  // play the game many times within that run of the applet!
   void reset()
   {
 	   this.numMoves = 0; //reset numMoves so far
 	   this.messageBottom = "";
 	    this.messageTop = "Switch adjacent blocks until you reach the goal." +
 		" Press a number to switch that block with the block to its right.";    
-	  // set up the goal and starting LL here
+
+	    // set up the goal and starting LL here
 	    this.goal = Game.generateGoal(difficulty);
 	    this.initial = Game.generateInitial(difficulty);
 	    this.current = this.initial.copyLL();
 	       
-         this.drawEnvironment();  // draw things to buffer
+        this.drawEnvironment();  // draw things to buffer
         this.displayMessage();   // display messages
         repaint();               // send buffer to the screen
-	  
-	  threadSuspended = true;
-	  
+ }
 
-  }
+  // check for win
+  boolean win()
+  {
+	  return this.current.equals(this.goal);
+  }  
   
-  
+  // get a color from rgb values
  private Color fromRGB(int r, int g, int b)
  {
 		float[] hsb = Color.RGBtoHSB(r, g, b, null);
@@ -199,6 +142,7 @@ public class Switcher extends JApplet
 	    
  }
  
+ // number the blocks
  void numberBlocks(int i, int top)
  {
 	    int LEFT = (getSize().width - (50*current.size())) / 2;
@@ -217,14 +161,25 @@ public class Switcher extends JApplet
     	g.setFont(tr);
     
  }
+ 
+ // check and handle all the updates
+ public void allUpdates()
+ {
+	  this.numMoves += 1;
+	  this.messageTop = "Swapping!";
+     this.drawEnvironment();
+     this.repaint();
+     if (this.win())
+     {
+   	  messageBottom = "You win!";
+     }
+     this.displayMessage();
+ }
   
-  // This is where you will draw your linked list of colored squares
-  // Notice that all drawing occurs in the off-screen buffer "image".
-  //   and that the drawing commands themselves are held in the Graphics g
-  // Later, repaint() will copy the image to the screen.
+// draw the environment
   void drawEnvironment()
   {
-    this.clear();                  // first, clear out our image buffer
+    this.clear();                 
     int WIDTH = 50;
     int HEIGHT = 50;
     int TOP1 = 50;
@@ -365,12 +320,12 @@ public class Switcher extends JApplet
   }
   
   
-  // You might use this method to draw a status String on the screen
+  // draw a status String on the screen
   void displayMessage()
   {
     int CENTER = getSize().width/2;
     g.setColor(TEXTC);
-    g.drawString(this.messageTop, STRINGX, STRINGY);
+    g.drawString(this.messageTop, 15, 25);
     g.setFont(db25);
     g.drawString(this.messageBottom, CENTER - 70, 400);
     g.setFont(tr);
@@ -382,19 +337,9 @@ public class Switcher extends JApplet
     g.setFont(tr);
  
   }
-  
-  // Things you want to happen at each update step
-  // should be placed in this method. It's called from run().
-  void cycle()
-  { 
-    this.drawEnvironment();  // draw things to buffer
-    this.displayMessage();   // display messages
-    repaint();               // send buffer to the screen
-    this.cycleNum++;         // One cycle just elapsed
-  }
-  
+
   /******************************************************************/  
-  // Here is how buttons and menu items work...
+// handle buttons and menu items
   public void actionPerformed(ActionEvent evt)
   {
     Object source = evt.getSource();
@@ -412,26 +357,14 @@ public class Switcher extends JApplet
     	difficulty = HARD;
     }
  
-    if (source == startButton || source == startItem)  
+    if (source == startButton)  
     {
     	this.reset();
     }
 
-    this.requestFocus(); // make sure the Applet keeps kbd focus
+    this.requestFocus(); // make sure the Applet keeps keyboard focus
   }
   
-  public void allUpdates()
-  {
-	  this.numMoves += 1;
-	  this.messageTop = "Swapping!";
-      this.drawEnvironment();
-      this.repaint();
-      if (this.win())
-      {
-    	  messageBottom = "You win!";
-      }
-      this.displayMessage();
-  }
   
   // Here's how keyboard events are handled...
   public void keyPressed(KeyEvent evt)
@@ -492,108 +425,38 @@ public class Switcher extends JApplet
           break;
           
       default:
-        currentColor = Color.cyan;
         break;
     }
 
   }
   
   public void keyReleased(KeyEvent evt) {
-      // We don't care if use *stops* pressing a key.
-      // So, we do nothing when it happens.
       return;
   }
   public void keyTyped(KeyEvent evt) {
-      // another keyboard-related event we don't care about
       return;
   }
 
-  /*
-   * A handy method to clear the applet's drawing area
-   */
+  
+   // clear the applet's drawing area
   void clear()
   {
     g.setColor(BGCOLOR);
     g.fillRect(0, 0, getSize().width, getSize().height);
-    g.drawRect(0, 0, getSize().width-1, GAMEBOARDHEIGHT-1);
+    g.drawRect(0, 0, getSize().width-1, 490-1);
   }
 
   
 /******************************************************************/  
-  /*
-   * The following methods and data members are used
-   *   to implement the Runnable interface and to
-   *   support pausing and resuming the applet.
-   *
-   */
-  Thread thread;           // the thread controlling the updates
-  boolean threadSuspended; // whether or not the thread is suspended
-  boolean running;         // whether or not the thread is stopped
-
-  /*
-   * This is the method that calls the "cycle()"
-   * method every so often (every sleepTime milliseconds).
-   */
-  public void run()
-  {
-    while (running) {
-      try {
-        if (thread != null) {
-          thread.sleep(sleepTime);
-          synchronized(this) {
-            while (threadSuspended)
-              wait(); // sleeps until notify() wakes it up
-          }
-        }
-      }
-      catch (InterruptedException e) { ; }
-
-      cycle();  // this represents 1 update cycle for the environment
-    }
-    thread = null;
-  }
-
-  /* This is the method attached to the "Start" button
-   */
-  public synchronized void go()
-  {
-	  this.reset();
-	  if (thread == null)  {
-      thread = new Thread(this);
-      running = true;
-      thread.start();
-      threadSuspended = false;
-    } else {
-      threadSuspended = false;
-    }
-    notify(); // wakes up the call to wait(), above
-  }
-
-  /*
-   * This is the method attached to the "Pause" button
-   */
-  void pause()
-  {
-    if (thread == null)
-      ;
-    else
-      threadSuspended = true;
-  }
-
-  /*
-   * This is a method called when you leave the page
-   *   that contains the applet. It stops the thread altogether.
-   */
-  public synchronized void stop()
-  {
-    running = false;
-    notify();
-  }
 
 //a panel that contains an image
   public class ImagePanel extends JPanel{
 
-  	//The image that this panel draws
+  	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	//The image that this panel draws
   	Image myImage;
 
   	public ImagePanel(Image me)
