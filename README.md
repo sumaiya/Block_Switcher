@@ -1,4 +1,4 @@
-Block_Switcher
+Block Switcher game
 ==============
 
 A Java applet game about permutations.
